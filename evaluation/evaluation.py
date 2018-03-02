@@ -45,11 +45,12 @@ from pdb import set_trace
 
 class testDescriptor(object):
     
-    def __init__(self):
+    def __init__(self, addnumpyoutput=False):
         self.__sourceroots=[]
         self.__predictroots=[]
         self.metrics=[]
         self.use_only = []
+        self.addnumpyoutput=addnumpyoutput
         
     def makePrediction(self, model, testdatacollection, outputDir, 
                        ident='', store_labels = False, monkey_class=''): 
@@ -71,6 +72,8 @@ class testDescriptor(object):
         self.__predictroots=[]
         self.metrics=[]
         
+        fullnumpyarray=np.array([])
+        
         for i in range(len(testdatacollection.samples)):
             sample=testdatacollection.samples[i]
             originroot=testdatacollection.originRoots[i]
@@ -82,15 +85,22 @@ class testDescriptor(object):
             td=testdatacollection.dataclass
             
             td.readIn(fullpath)
-            truthclasses=td.getUsedTruth()
-            formatstring=[]
-            if len(truthclasses)>0 and len(truthclasses[0])>0:
-                formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
-            regressionclasses=[]
-            if hasattr(td, 'regressiontargetclasses'):
-                regressionclasses=td.regressiontargetclasses
-            #new implementation. Please check with the store_labels option, Mauro
-            formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
+            
+            if hasattr(td, 'customlabels'):
+                import copy
+                formatstring=copy.deepcopy(td.customlabels)
+            
+            else:
+                truthclasses=td.getUsedTruth()
+                formatstring=[]
+                if len(truthclasses)>0 and len(truthclasses[0])>0:
+                    formatstring = ['prob_%s%s' % (i, ident) for i in truthclasses]
+                regressionclasses=[]
+                if hasattr(td, 'regressiontargetclasses'):
+                    regressionclasses=td.regressiontargetclasses
+                #new implementation. Please check with the store_labels option, Mauro
+                formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
+
 
             features=td.x
             labels=td.y
@@ -109,6 +119,7 @@ class testDescriptor(object):
             all_write = np.concatenate([all_write, weights], axis=1)
             formatstring.append('weight')
             if not all_write.shape[1] == len(formatstring):
+                print(formatstring, ' vs ', all_write.shape[1])
                 raise ValueError('Prediction output does not match with the provided targets!')
                
             all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
@@ -119,45 +130,16 @@ class testDescriptor(object):
             self.__predictroots.append(outputDir+'/'+outrootfilename)
             print(formatstring)
             print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
-            
-            continue
+            if self.addnumpyoutput:
+                if len(fullnumpyarray):
+                    fullnumpyarray=np.concatenate((fullnumpyarray,all_write))
+                else:
+                    fullnumpyarray=np.array(all_write)
+                    
+        if self.addnumpyoutput:    
+            np.save(outputDir+'/'+'allprediction.npy', fullnumpyarray)
                 
-            #print(prediction[1].shape[1])
-            if isinstance(prediction, list):
-                formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
-                if prediction[1].shape[1] > len(regressionclasses):
-                    raise ValueError('Regression (2nd prediction output) does not match with the provided targets!')
-                all_write = np.concatenate(prediction, axis=1)
-                if store_labels:
-                    all_write = np.concatenate((all_write, labels[0], labels[1]), axis=1)
-                    formatstring.extend(truthclasses)
-                    formatstring.append('truePt')
-            elif prediction.shape[1] == len(truthclasses):
-                all_write = prediction
-                if store_labels:
-                    all_write = np.concatenate((all_write, labels if not isinstance(labels, list) else labels[0]), axis=1)
-                    formatstring.extend(truthclasses)
-            else:
-                formatstring.extend(['reg_%s%s' % (i, ident) for i in regressionclasses])
-                if prediction.shape[1] > 2:
-                    raise ValueError('Regression output does not match with the provided targets!')
-                all_write = prediction
-                if store_labels:
-                    all_write = np.concatenate((all_write, labels), axis=1)
-                    formatstring.append('truePt')
-
-            all_write = np.concatenate([all_write, weights], axis=1)
-            formatstring.append('weight')
-                
-            all_write = np.core.records.fromarrays(np.transpose(all_write), names= ','.join(formatstring))
-            array2root(all_write,outputDir+'/'+outrootfilename,"tree",mode="recreate")
             
-            #self.metrics.append(metric)
-            self.__sourceroots.append(originroot)
-            self.__predictroots.append(outputDir+'/'+outrootfilename)
-            print(formatstring)
-            print('\ncreated predition friend tree '+outputDir+'/'+outrootfilename+ ' for '+originroot)
-
     def writeToTextFile(self, outfile):
         '''
         Very simple text file output to use when creating chains with friends.
