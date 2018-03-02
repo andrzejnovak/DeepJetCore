@@ -279,7 +279,7 @@ class DataCollection(object):
             if self.useRelativePaths:
                 self.originRoots.append(fdir+'/'+line)
             else:
-                self.originRoots.append(line)
+            	self.originRoots.append(line)
 
         if len(self.originRoots)<1:
             raise Exception('root samples list empty')

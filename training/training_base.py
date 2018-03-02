@@ -20,20 +20,22 @@ from Losses import *
 class training_base(object):
     
     def __init__(
-				self, splittrainandtest=0.85,
-				useweights=False, testrun=False,
-				resumeSilently=False, 
+		self, splittrainandtest=0.85,
+		useweights=False, testrun=False,
+		resumeSilently=False, 
                 renewtokens=True,
-                collection_class=DataCollection):
+                collection_class=DataCollection,
+		args=None ):
         
         
+        if args==None:
+	        parser = ArgumentParser('Run the training')
+	        parser.add_argument('inputDataCollection')
+	        parser.add_argument('outputDir')
+	        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
         
-        parser = ArgumentParser('Run the training')
-        parser.add_argument('inputDataCollection')
-        parser.add_argument('outputDir')
-        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
-        
-        args = parser.parse_args()
+        	args = parser.parse_args()
+
         import os
         
         
@@ -137,12 +139,14 @@ class training_base(object):
     def modelSet(self):
         return not self.keras_model==None
         
-    def setModel(self,model,**modelargs):
+    def setModel(self,model, datasets = None, removedVars = None, **modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
         self.keras_model=model(self.keras_inputs,
                                self.train_data.getNClassificationTargets(),
                                self.train_data.getNRegressionTargets(),
+			       datasets,
+			       removedVars,
                                **modelargs)
         if not self.keras_model:
             raise Exception('Setting model not successful') 
