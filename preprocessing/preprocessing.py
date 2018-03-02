@@ -11,6 +11,10 @@ def setDefaultsZero(inarray):
     inarray[inarray == -999] = 0
     return inarray
 
+def setTreeName(name):
+    from DeepJetCore.compiled import c_meanNormZeroPad
+    c_meanNormZeroPad.setTreeName(name)
+
 def produceWeigths(Tuple,nameX,nameY,bins,classes=[],normed=False):
     """
     provides a weight vector to flatten (typically)  PT and eta
