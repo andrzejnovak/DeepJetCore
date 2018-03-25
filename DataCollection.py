@@ -660,6 +660,9 @@ class DataCollection(object):
         
     def getAllWeights(self):
         return self.__stackData(self.dataclass,'w')
+
+    def getAllSpectators(self):
+        return self.__stackData(self.dataclass,'z')
     
     
     def getSamplePath(self,samplefile):
@@ -683,6 +686,8 @@ class DataCollection(object):
                 thislist=td.y
             if selector == 'w':
                 thislist=td.w
+            if selector == 'z':
+                thislist=td.z
                
             if firstcall:
                 out=thislist
@@ -777,6 +782,7 @@ class DataCollection(object):
                 
                 
             def __getLast(self):
+		print(self.lastcounter)
                 self.tdlist[self.lastcounter].readIn_join(wasasync=True,waitforStart=True)
                 td=self.tdlist[self.lastcounter]
                 #print('got ',self.lastcounter)
@@ -995,7 +1001,7 @@ class DataCollection(object):
             for i in range(0,dimw):
                 if(wout[i].ndim==1):
                     wout[i]=(wout[i].reshape(wout[i].shape[0],1))
-                if not xout[i].shape[1] >0:
+                if not wout[i].shape[1] >0:
                     raise Exception('serious problem with the output shapes!!')
             
             processedbatches+=1

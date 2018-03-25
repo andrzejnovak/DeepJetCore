@@ -41,16 +41,17 @@ def fileTimeOut(fileName, timeOut):
         time.sleep(1)
 
 
-def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None):
+def _read_arrs_(arrwl,arrxl,arryl,arrzl,doneVal,fileprefix,tdref=None,randomSeed=None):
     import gc
     gc.collect()
 
     import h5py
     from sklearn.utils import shuffle
-    try:
-        idstrs=['w','x','y']
+    #try:
+    if True:
+        idstrs=['w','x','y','z']
         h5f = h5py.File(fileprefix,'r')
-        alllists=[arrwl,arrxl,arryl]
+        alllists=[arrwl,arrxl,arryl,arrzl]
         for j in range(len(idstrs)):
             fidstr=idstrs[j]
             arl=alllists[j]
@@ -64,9 +65,9 @@ def _read_arrs_(arrwl,arrxl,arryl,doneVal,fileprefix,tdref=None,randomSeed=None)
         doneVal.value=True
         h5f.close()
         del h5f
-    except Exception as d:
-        raise d
-    finally:
+    #except Exception as d:
+    #    raise d
+    #finally:
         if tdref:
             tdref.removeRamDiskFile()  
     
@@ -114,10 +115,10 @@ class TrainData(object):
         self.truthclasses=[]
         self.allbranchestoberead=[]
         
-        self.weightbranchX=''
-        self.weightbranchY=''
-        self.weight_binX = numpy.array([-1e12, 1e12],dtype=float)
-        self.weight_binY = numpy.array([-1e12, 1e12],dtype=float)
+        self.weightbranchX='fj_pt'
+        self.weightbranchY='fj_sdmass'
+        self.weight_binX = numpy.array([300, 2000],dtype=float)
+        self.weight_binY = numpy.array([30, 200],dtype=float)
         
         self.reducedtruthclasses=[]
         self.regressiontargetclasses=[]
@@ -149,14 +150,17 @@ class TrainData(object):
         if hasattr(self, 'x'):
             del self.x
             del self.y
+            del self.z
             del self.w
         if hasattr(self, 'w_list'):
             del self.w_list
             del self.x_list
             del self.y_list
+            del self.z_list
             
         self.x=[numpy.array([])]
         self.y=[numpy.array([])]
+        self.z=[numpy.array([])]
         self.w=[numpy.array([])]
         
         self.nsamples=None
@@ -252,9 +256,11 @@ class TrainData(object):
 
         _writeoutListinfo(self.w,'w',h5f)
         _writeoutListinfo(self.x,'x',h5f)
+        _writeoutListinfo(self.z,'z',h5f)
         _writeoutListinfo(self.y,'y',h5f)
 
         _writeoutArrays(self.w,'w',h5f)
+        _writeoutArrays(self.z,'z',h5f)
         _writeoutArrays(self.x,'x',h5f)
         _writeoutArrays(self.y,'y',h5f)
         
@@ -320,6 +326,7 @@ class TrainData(object):
                 sharedlist.append(numpy.array([]))
                 iidstr=idstr+str(i)
                 shapeinfo=numpy.array(self.h5f[iidstr+'_shape'])
+		print(shapeinfo)
                 shapeinfos.append(shapeinfo)
             return sharedlist, shapeinfos
         
@@ -332,14 +339,17 @@ class TrainData(object):
             self.nsamples=self.h5f['n']
             self.nsamples=self.nsamples[0]
             if True or not hasattr(self, 'w_shapes'):
+		print("READING LISTS SHAPES")
                 self.w_list,self.w_shapes=_readListInfo_('w')
                 self.x_list,self.x_shapes=_readListInfo_('x')
                 self.y_list,self.y_shapes=_readListInfo_('y')
+                self.z_list,self.z_shapes=_readListInfo_('z')
             else:
                 print('\nshape known\n')
                 self.w_list,_=_readListInfo_('w')
                 self.x_list,_=_readListInfo_('x')
                 self.y_list,_=_readListInfo_('y')
+                self.z_list,_=_readListInfo_('z')
                 
             self.h5f.close()
             del self.h5f
@@ -368,6 +378,8 @@ class TrainData(object):
                         shutil.copyfile(filebase+'x.'+str(i),unique_filename+'.x.'+str(i))
                     for i in range(len(self.y_list)):
                         shutil.copyfile(filebase+'y.'+str(i),unique_filename+'.y.'+str(i))
+                    for i in range(len(self.z_list)):
+                        shutil.copyfile(filebase+'z.'+str(i),unique_filename+'.z.'+str(i))
                     unique_filename+='.meta'
                         
                 else:
@@ -379,12 +391,12 @@ class TrainData(object):
             #create shared mem in sync mode
             for i in range(len(self.w_list)):
                 self.w_list[i]=self.__createArr(self.w_shapes[i])
-                
             for i in range(len(self.x_list)):
                 self.x_list[i]=self.__createArr(self.x_shapes[i])
-                
             for i in range(len(self.y_list)):
                 self.y_list[i]=self.__createArr(self.y_shapes[i])
+            for i in range(len(self.z_list)):
+                self.z_list[i]=self.__createArr(self.z_shapes[i])
             
             if read_async:
                 self.readdone=multiprocessing.Value('b',False)
@@ -410,13 +422,18 @@ class TrainData(object):
                                                            filebase+'y.'+str(i),
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
-                
+                for i in range(len(self.z_list)):
+                    self.readthreadids.append(startReading(self.z_list[i].ctypes.data,
+                                                           filebase+'z.'+str(i),
+                                                           list(self.z_list[i].shape),
+                                                           isRamDisk))    
                 
             else:
                 self.readthread=multiprocessing.Process(target=_read_arrs_, 
                                                         args=(self.w_list,
                                                               self.x_list,
                                                               self.y_list,
+                                                              self.z_list,
                                                               self.readdone,
                                                               readfile,
                                                               self,randomseed))
@@ -441,10 +458,15 @@ class TrainData(object):
                                                            filebase+'y.'+str(i),
                                                            list(self.y_list[i].shape),
                                                            isRamDisk))
+                for i in range(len(self.z_list)):
+                    (readBlocking(self.z_list[i].ctypes.data,
+                                                           filebase+'z.'+str(i),
+                                                           list(self.z_list[i].shape),
+                                                           isRamDisk))
                 
             else:
                 self.readdone=multiprocessing.Value('b',False)
-                _read_arrs_(self.w_list,self.x_list,self.y_list,self.readdone,readfile,self,randomseed)
+                _read_arrs_(self.w_list,self.x_list,self.y_list,self.z_list,self.readdone,readfile,self,randomseed)
             
             
         
@@ -458,7 +480,8 @@ class TrainData(object):
      
     def readIn_join(self,wasasync=True,waitforStart=True):
         
-        try:
+        #try:
+	if True:
             if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
                 print('\nreadIn_join:read never started\n')
             
@@ -510,26 +533,32 @@ class TrainData(object):
             import copy
             #move away from shared memory
             #this costs performance but seems necessary
+	    """
+            print(self.x_list)
+
             direct=False
             with threadingfileandmem_lock:
+		#print(self.x_list)
                 if direct:
                     self.w=self.w_list
                     self.x=self.x_list
                     self.y=self.y_list
+                    self.z=self.z_list
                 else:
                     self.w=copy.deepcopy(self.w_list)
                     self.x=copy.deepcopy(self.x_list)
                     self.y=copy.deepcopy(self.y_list)
-                    
+                    self.z=copy.deepcopy(self.z_list)
                 del self.w_list
                 del self.x_list
                 del self.y_list
+                del self.z_list
             #in case of some errors during read-in
-            
-        except Exception as d:
-            raise d
-        finally:
-            self.removeRamDiskFile()
+            """
+        #except Exception as d:
+        #    raise d
+        #finally:
+        #    self.removeRamDiskFile()
         
         #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):
@@ -545,10 +574,13 @@ class TrainData(object):
             self.x[i]=reshape_fast(self.x[i],self.x_shapes[i])
         for i in range(len(self.y)):
             self.y[i]=reshape_fast(self.y[i],self.y_shapes[i])
-        
+        for i in range(len(self.z)):
+            self.z[i]=reshape_fast(self.y[i],self.z_shapes[i])
+ 
         self.w_list=None
         self.x_list=None
         self.y_list=None
+        self.z_list=None
         if wasasync and self.readthread:
             self.readthread.terminate()
         self.readthread=None
@@ -561,6 +593,7 @@ class TrainData(object):
             self.w=self.w_list
             self.x=self.x_list
             self.y=self.y_list
+            self.z=self.z_list
         else:
             import copy
             self.w=copy.deepcopy(self.w_list)
@@ -569,6 +602,8 @@ class TrainData(object):
             del self.x_list
             self.y=copy.deepcopy(self.y_list)
             del self.y_list
+            self.z=copy.deepcopy(self.z_list)
+            del self.z_list
         
         def reshape_fast(arr,shapeinfo):
             if len(shapeinfo)<2:
@@ -588,10 +623,12 @@ class TrainData(object):
             self.x[i]=reshape_fast(self.x[i],self.x_shapes[i])
         for i in range(len(self.y)):
             self.y[i]=reshape_fast(self.y[i],self.y_shapes[i])
-        
+        for i in range(len(self.z)):
+            self.z[i]=reshape_fast(self.z[i],self.z_shapes[i])
         self.w_list=None
         self.x_list=None
         self.y_list=None
+        self.z_list=None
         self.readthread=None
         
         
@@ -700,6 +737,7 @@ class TrainData(object):
             print('remove')
             self.x = [x[notremoves > 0] for x in self.x]
             self.y = [y[notremoves > 0] for y in self.y]
+            self.z = [z[notremoves > 0] for z in self.z]
             weights=weights[notremoves > 0]
             self.w = [weights for _ in self.y]
             newnsamp=self.x[0].shape[0]

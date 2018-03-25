@@ -212,17 +212,18 @@ class Weighter(object):
                     rand=numpy.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
                     
-                    if rand < prob and index != self.refclassidx:
-                        #print('rm  ',index,self.refclassidx,jet[classs],classs)
+                    if jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]:
+                        notremove[counter]=0
+                        # will remove out of bounds events
+                    elif rand < prob and index != self.refclassidx:
                         notremove[counter]=0
                     else:
-                        #print('keep',index,self.refclassidx,jet[classs],classs)
+                        #print('keep',rand,prob,index,self.refclassidx,jet[classs],classs,jet[self.nameX],jet[self.nameY],binX,binY)
                         notremove[counter]=1
                         xaverage[index]+=jet[self.nameX]
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
-            
-                    counter=counter+1            
+            counter=counter+1            
         
             
         if not len(notremove) == counter:
