@@ -326,7 +326,7 @@ class TrainData(object):
                 sharedlist.append(numpy.array([]))
                 iidstr=idstr+str(i)
                 shapeinfo=numpy.array(self.h5f[iidstr+'_shape'])
-		print(shapeinfo)
+		#print(shapeinfo)
                 shapeinfos.append(shapeinfo)
             return sharedlist, shapeinfos
         
@@ -338,8 +338,8 @@ class TrainData(object):
                 raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
             self.nsamples=self.h5f['n']
             self.nsamples=self.nsamples[0]
-            if True or not hasattr(self, 'w_shapes'):
-		print("READING LISTS SHAPES")
+            if True :#or not hasattr(self, 'w_shapes'):
+		#print("READING LISTS SHAPES")
                 self.w_list,self.w_shapes=_readListInfo_('w')
                 self.x_list,self.x_shapes=_readListInfo_('x')
                 self.y_list,self.y_shapes=_readListInfo_('y')
@@ -533,12 +533,9 @@ class TrainData(object):
             import copy
             #move away from shared memory
             #this costs performance but seems necessary
-	    """
-            print(self.x_list)
 
             direct=False
             with threadingfileandmem_lock:
-		#print(self.x_list)
                 if direct:
                     self.w=self.w_list
                     self.x=self.x_list
@@ -553,12 +550,12 @@ class TrainData(object):
                 del self.x_list
                 del self.y_list
                 del self.z_list
+
             #in case of some errors during read-in
-            """
         #except Exception as d:
         #    raise d
         #finally:
-        #    self.removeRamDiskFile()
+        self.removeRamDiskFile()
         
         #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):
@@ -567,7 +564,6 @@ class TrainData(object):
             arr=arr.reshape(shapeinfo)
             return arr
         
-        
         for i in range(len(self.w)):
             self.w[i]=reshape_fast(self.w[i],self.w_shapes[i])
         for i in range(len(self.x)):
@@ -575,7 +571,7 @@ class TrainData(object):
         for i in range(len(self.y)):
             self.y[i]=reshape_fast(self.y[i],self.y_shapes[i])
         for i in range(len(self.z)):
-            self.z[i]=reshape_fast(self.y[i],self.z_shapes[i])
+            self.z[i]=reshape_fast(self.z[i],self.z_shapes[i])
  
         self.w_list=None
         self.x_list=None

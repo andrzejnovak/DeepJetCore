@@ -14,7 +14,7 @@ import logging
 from pdb import set_trace
 import copy
 
-usenewformat=True
+usenewformat=False
 
 
 # super not-generic without safety belts
@@ -289,7 +289,7 @@ class DataCollection(object):
             if self.useRelativePaths:
                 self.originRoots.append(fdir+'/'+line)
             else:
-            	self.originRoots.append(line)
+                self.originRoots.append(line)
 
         if len(self.originRoots)<1:
             raise Exception('root samples list empty')
@@ -657,12 +657,12 @@ class DataCollection(object):
     
     def getAllFeatures(self):
         return self.__stackData(self.dataclass,'x')
+    
+    def getAllSpectators(self):
+        return self.__stackData(self.dataclass,'z')
         
     def getAllWeights(self):
         return self.__stackData(self.dataclass,'w')
-
-    def getAllSpectators(self):
-        return self.__stackData(self.dataclass,'z')
     
     
     def getSamplePath(self,samplefile):
@@ -684,10 +684,10 @@ class DataCollection(object):
                 thislist=td.x
             if selector == 'y':
                 thislist=td.y
-            if selector == 'w':
-                thislist=td.w
             if selector == 'z':
                 thislist=td.z
+            if selector == 'w':
+                thislist=td.w
                
             if firstcall:
                 out=thislist
@@ -782,7 +782,6 @@ class DataCollection(object):
                 
                 
             def __getLast(self):
-		print(self.lastcounter)
                 self.tdlist[self.lastcounter].readIn_join(wasasync=True,waitforStart=True)
                 td=self.tdlist[self.lastcounter]
                 #print('got ',self.lastcounter)
@@ -1001,7 +1000,7 @@ class DataCollection(object):
             for i in range(0,dimw):
                 if(wout[i].ndim==1):
                     wout[i]=(wout[i].reshape(wout[i].shape[0],1))
-                if not wout[i].shape[1] >0:
+                if not xout[i].shape[1] >0:
                     raise Exception('serious problem with the output shapes!!')
             
             processedbatches+=1
@@ -1025,3 +1024,4 @@ class DataCollection(object):
     
     
     
+
