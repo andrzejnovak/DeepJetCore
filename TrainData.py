@@ -115,10 +115,10 @@ class TrainData(object):
         self.truthclasses=[]
         self.allbranchestoberead=[]
         
-        self.weightbranchX='fj_pt'
-        self.weightbranchY='fj_sdmass'
-        self.weight_binX = numpy.array([300, 2000],dtype=float)
-        self.weight_binY = numpy.array([30, 200],dtype=float)
+        self.weightbranchX=''
+        self.weightbranchY=''
+        self.weight_binX = numpy.array([-1e12, 1e12],dtype=float)
+        self.weight_binY = numpy.array([-1e12, 1e12],dtype=float)
         
         self.reducedtruthclasses=[]
         self.regressiontargetclasses=[]

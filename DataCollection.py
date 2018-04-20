@@ -587,13 +587,13 @@ class DataCollection(object):
         lastindex=startindex-1
         alldone=False
         results=[]
+	
         import time
         try:
             while not alldone:
                 nrunning=0
                 for runs in processrunning:
                     if runs: nrunning+=1
-                
                 for i in range(len(processes)):
                     if nrunning>=nchilds:
                         break
@@ -604,8 +604,6 @@ class DataCollection(object):
                     processes[i].start()
                     processrunning[i]=True
                     nrunning+=1
-                    
-                
                 
                 if not wo_queue.empty():
                     res=wo_queue.get()
@@ -622,11 +620,12 @@ class DataCollection(object):
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
-                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        logging.info('>>>> collected result %d of %d' % (thisidx+1,len(self.originRoots)))
                         __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
-                        lastindex=thisidx        
+                        lastindex=thisidx
+               
                 
-                if nrunning==0:
+                if nrunning==0 and lastindex+1 == len(self.originRoots):
                     alldone=True
                     continue
                 time.sleep(0.1)

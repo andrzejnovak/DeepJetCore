@@ -119,8 +119,8 @@ def meanNormProd(Tuple):
             if not addstddev:
                 addstddev=1
             stddev = stddev+(addstddev,)
-            logging.info('name: %s --> %s' % (name, chain.shape))
-            logging.info('%s %s' % (chain.mean(), chain.std()))
+            #logging.info('name: %s --> %s' % (name, chain.shape))
+            #logging.info('%s %s' % (chain.mean(), chain.std()))
             dTypeList.append((name, float ))
         else:
             array = Tuple[name].view(numpy.ndarray)
@@ -133,8 +133,8 @@ def meanNormProd(Tuple):
             if not addstddev:
                 addstddev=1
             stddev = stddev+(addstddev,)
-            logging.info('name: %s --> %s' % (name, array.shape))
-            logging.info('%s %s' % (array.mean(), array.std()))
+            #logging.info('name: %s --> %s' % (name, array.shape))
+            #logging.info('%s %s' % (array.mean(), array.std()))
             formats +='float32,'
             names += name+','
             dTypeList.append((name, float ))
