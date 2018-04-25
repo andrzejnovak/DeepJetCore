@@ -479,7 +479,6 @@ class TrainData(object):
      
     def readIn_join(self,wasasync=True,waitforStart=True):
         
-        #try:
 	if True:
             if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
                 print('\nreadIn_join:read never started\n')
