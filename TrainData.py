@@ -47,8 +47,7 @@ def _read_arrs_(arrwl,arrxl,arryl,arrzl,doneVal,fileprefix,tdref=None,randomSeed
 
     import h5py
     from sklearn.utils import shuffle
-    #try:
-    if True:
+    try:
         idstrs=['w','x','y','z']
         h5f = h5py.File(fileprefix,'r')
         alllists=[arrwl,arrxl,arryl,arrzl]
@@ -338,7 +337,7 @@ class TrainData(object):
                 raise IOError('File %s could not be opened properly, it may be corrupted' % fileprefix)
             self.nsamples=self.h5f['n']
             self.nsamples=self.nsamples[0]
-            if True :#or not hasattr(self, 'w_shapes'):
+            if True or not hasattr(self, 'w_shapes'):
 		#print("READING LISTS SHAPES")
                 self.w_list,self.w_shapes=_readListInfo_('w')
                 self.x_list,self.x_shapes=_readListInfo_('x')
@@ -552,10 +551,10 @@ class TrainData(object):
                 del self.z_list
 
             #in case of some errors during read-in
-        #except Exception as d:
-        #    raise d
-        #finally:
-        self.removeRamDiskFile()
+        except Exception as d:
+            raise d
+        finally:
+            self.removeRamDiskFile()
         
         #check if this is really neccessary 
         def reshape_fast(arr,shapeinfo):
