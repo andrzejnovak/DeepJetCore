@@ -64,9 +64,9 @@ def _read_arrs_(arrwl,arrxl,arryl,arrzl,doneVal,fileprefix,tdref=None,randomSeed
         doneVal.value=True
         h5f.close()
         del h5f
-    #except Exception as d:
-    #    raise d
-    #finally:
+    except Exception as d:
+        raise d
+    finally:
         if tdref:
             tdref.removeRamDiskFile()  
     
@@ -479,7 +479,7 @@ class TrainData(object):
      
     def readIn_join(self,wasasync=True,waitforStart=True):
         
-	if True:
+	try:
             if not not hasattr(self, 'readthreadids') and not waitforStart and not self.readthread and wasasync:
                 print('\nreadIn_join:read never started\n')
             

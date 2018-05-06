@@ -195,6 +195,7 @@ class DataCollection(object):
     
     def setBatchSize(self,bsize):
         if bsize > self.nsamples:
+            print("Batch size = ", bsize, "Sample = ", self.nsamples)
             raise Exception('Batch size must not be bigger than total sample size')
         self.__batchsize=bsize
 
@@ -576,8 +577,8 @@ class DataCollection(object):
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
-        #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
-        #    nchilds=cpu_count()-5
+        if 'max' in os.getenv('HOSTNAME'):
+            nchilds=int(cpu_count()/3)-2
         if nchilds<1: 
             nchilds=1
         

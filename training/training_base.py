@@ -47,7 +47,7 @@ class training_base(object):
 				self, splittrainandtest=0.85,
 				useweights=False, testrun=False,
 				resumeSilently=False, 
-				renewtokens=True,
+				renewtokens=False,
 				collection_class=DataCollection,
 				parser=None
 				):
@@ -108,7 +108,8 @@ class training_base(object):
         self.trainedepoches=0
         self.compiled=False
         self.checkpointcounter=0
-        self.renewtokens=renewtokens
+        #self.renewtokens=renewtokens
+        self.renewtokens=False
         
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
