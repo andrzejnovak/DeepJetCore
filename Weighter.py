@@ -28,6 +28,7 @@ class Weighter(object):
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
+        self.removeUnderOverflow=False
     
     def __eq__(self, other):
         'A == B'
@@ -211,8 +212,10 @@ class Weighter(object):
                 if  useonlyoneclass or 1 == jet[classs]:
                     rand=numpy.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
-                    
-                    if rand < prob and index != self.refclassidx:
+                    if self.removeUnderOverflow and (jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]):
+                        #print("over/underflow")
+                        notremove[counter]=0
+                    elif rand < prob and index != self.refclassidx:
                         #print('rm  ',index,self.refclassidx,jet[classs],classs)
                         notremove[counter]=0
                     else:
@@ -222,7 +225,12 @@ class Weighter(object):
                         yaverage[index]+=jet[self.nameY]
                         norm[index]+=1
             
-                    counter=counter+1            
+                    counter=counter+1
+            if sum([jet[classs] for classs in self.classes])==0:
+                #print('undefined class, remove?')
+                notremove[counter]=0
+                counter=counter+1
+
         
             
         if not len(notremove) == counter:
