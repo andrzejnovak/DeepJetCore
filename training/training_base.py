@@ -297,8 +297,10 @@ class training_base(object):
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks
-        
-        
+
+        minTokenLifetime=5
+        if self.renewtokens==False:
+            minTokenLifetime=0
         callbacks=DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
                                     lr_factor=lr_factor,
@@ -307,6 +309,7 @@ class training_base(object):
                                     lr_cooldown=lr_cooldown, 
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir,
+                                    minTokenLifetime=minTokenLifetime,                                
                                     checkperiod=checkperiod)
         nepochs=nepochs-self.trainedepoches
         print('starting training')
