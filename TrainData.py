@@ -705,7 +705,7 @@ class TrainData(object):
         if self.remove or self.weight:
             for fname in filenames:
                 nparray = self.readTreeFromRootToTuple(fname, branches=branches)
-                weighter.addDistributions(nparray)
+                weighter.addDistributions(nparray, referenceclass=self.referenceclass)
                 del nparray
                 showprog.show(counter)
                 counter=counter+1
