@@ -49,7 +49,7 @@ class training_base(object):
 				resumeSilently=False, 
 				renewtokens=True,
 				collection_class=DataCollection,
-				parser=None
+				parser=None,
 				):
         
         if parser is None: parser = ArgumentParser('Run the training')
@@ -140,7 +140,7 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.002)
+            self.train_data.split(0.02)
             
         self.val_data=self.train_data.split(splittrainandtest)
         
@@ -202,6 +202,9 @@ class training_base(object):
         self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
+
+    def loadWeights(self,filename):
+        self.keras_model.load_weights(filename, by_name=True)
         
     def compileModel(self,
                      learningrate,
