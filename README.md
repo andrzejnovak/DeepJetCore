@@ -17,14 +17,15 @@ Pre-Installtion: Anaconda setup (only once)
 Download miniconda3
 ```
 cd <afs work directory: you need some disk space for this!>
-wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
-bash Miniconda3-latest-Linux-x86_64.sh
+wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
+bash Miniconda2-latest-Linux-x86_64.sh
+# You can also use miniconda3 if you prefer python 3 as your default
 ```
 Please follow the installation process. If you don't know what an option does, please answer 'yes'.
 After installation, you have to log out and log in again for changes to take effect.
 If you don't use bash, you might have to add the conda path to your .rc file
 ```
-export PATH="<your miniconda directory>/miniconda3/bin:$PATH"
+export PATH="<your miniconda directory>/miniconda2/bin:$PATH"
 ```
 This has to be only done once.
 
@@ -40,6 +41,15 @@ cd DeepJetCore/environment
 ```
 For enabling gpu support add 'gpu' as an additional option to the last command.
 This will take a while. Please log out and in again once the installation is finised.
+
+Before new changes are added to the installer to make this work on Maxwell:
+```
+source gpu_env.sh
+pip uninstall tensorflow
+pip install tensorflow-gpu
+pip install keras --upgrade
+pip install pandas
+```
 
 Compiling DeepJetCore
 ===========

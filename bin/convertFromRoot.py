@@ -39,7 +39,7 @@ class_options = dict((str(i).split("'")[1].split('.')[-1], i) for i in class_opt
 
 parser = ArgumentParser('program to convert root tuples to traindata format')
 parser.add_argument("-i", help="set input sample description (output from the check.py script)", metavar="FILE")
-parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=False, action="store_true")
+parser.add_argument("--noRelativePaths", help="Assume input samples are absolute paths with respect to working directory", default=True, action="store_true")
 parser.add_argument("-o",  help="set output path", metavar="PATH")
 parser.add_argument("-c",  choices = class_options.keys(), help="set output class (options: %s)" % ', '.join(class_options.keys()), metavar="Class")
 parser.add_argument("--classArgs",  help="Arguments to pass to output class")

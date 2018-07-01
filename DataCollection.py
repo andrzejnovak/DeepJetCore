@@ -196,6 +196,7 @@ class DataCollection(object):
     
     def setBatchSize(self,bsize):
         if bsize > self.nsamples:
+            print("Batch size = ", bsize, "Sample = ", self.nsamples)
             raise Exception('Batch size must not be bigger than total sample size')
         self.__batchsize=bsize
 
@@ -287,7 +288,8 @@ class DataCollection(object):
         lines = [line.rstrip('\n') for line in open(file)]
         for line in lines:
             if len(line) < 1: continue
-            if self.useRelativePaths:
+            #if self.useRelativePaths:
+	    if not line.startswith('/'):
                 self.originRoots.append(fdir+'/'+line)
             else:
                 self.originRoots.append(line)
@@ -366,7 +368,7 @@ class DataCollection(object):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
-        self.dataclass.weight=True #False
+        self.dataclass.weight=False #True #False
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
@@ -576,8 +578,8 @@ class DataCollection(object):
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
-        #if 'nvidiagtx1080' in os.getenv('HOSTNAME'):
-        #    nchilds=cpu_count()-5
+        if 'max' in os.getenv('HOSTNAME'):
+            nchilds=int(cpu_count()/3)-2
         if nchilds<1: 
             nchilds=1
         
@@ -588,13 +590,13 @@ class DataCollection(object):
         lastindex=startindex-1
         alldone=False
         results=[]
+	
         import time
         try:
             while not alldone:
                 nrunning=0
                 for runs in processrunning:
                     if runs: nrunning+=1
-                
                 for i in range(len(processes)):
                     if nrunning>=nchilds:
                         break
@@ -605,8 +607,6 @@ class DataCollection(object):
                     processes[i].start()
                     processrunning[i]=True
                     nrunning+=1
-                    
-                
                 
                 if not wo_queue.empty():
                     res=wo_queue.get()
@@ -623,11 +623,12 @@ class DataCollection(object):
                 for r in results:
                     thisidx=r[0]
                     if thisidx==lastindex+1:
-                        logging.info('>>>> collected result %d of %d' % (thisidx,len(self.originRoots)))
+                        logging.info('>>>> collected result %d of %d' % (thisidx+1,len(self.originRoots)))
                         __collectWriteInfo(r[1][0],r[1][1],r[1][2],outputDir)
-                        lastindex=thisidx        
+                        lastindex=thisidx
+               
                 
-                if nrunning==0:
+                if nrunning==0 and lastindex+1 == len(self.originRoots):
                     alldone=True
                     continue
                 time.sleep(0.1)
@@ -658,6 +659,9 @@ class DataCollection(object):
     
     def getAllFeatures(self):
         return self.__stackData(self.dataclass,'x')
+    
+    def getAllSpectators(self):
+        return self.__stackData(self.dataclass,'z')
         
     def getAllWeights(self):
         return self.__stackData(self.dataclass,'w')
@@ -682,6 +686,8 @@ class DataCollection(object):
                 thislist=td.x
             if selector == 'y':
                 thislist=td.y
+            if selector == 'z':
+                thislist=td.z
             if selector == 'w':
                 thislist=td.w
                
@@ -1100,3 +1106,4 @@ class DataCollection(object):
     
     
     
+
