@@ -47,19 +47,22 @@ class training_base(object):
 				self, splittrainandtest=0.85,
 				useweights=False, testrun=False,
 				resumeSilently=False, 
-				renewtokens=True,
+				renewtokens=False,
 				collection_class=DataCollection,
-				parser=None
+				parser=None,
 				):
         
-        if parser is None: parser = ArgumentParser('Run the training')
-        parser.add_argument('inputDataCollection')
-        parser.add_argument('outputDir')
-        parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
-        parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
-        parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
+        if parser is None: 
+		parser = ArgumentParser('Run the training')
+		parser.add_argument('inputDataCollection')
+	       	parser.add_argument('outputDir')
+	       	parser.add_argument('--modelMethod', help='Method to be used to instantiate model in derived training class', metavar='OPT', default=None)
+	      	parser.add_argument("--gpu",  help="select specific GPU",   type=int, metavar="OPT", default=-1)
+	       	parser.add_argument("--gpufraction",  help="select memory fraction for GPU",   type=float, metavar="OPT", default=-1)
         
-        args = parser.parse_args()
+        	args = parser.parse_args()
+	else:
+		args=parser
         self.args = args
         import os
         
@@ -105,7 +108,8 @@ class training_base(object):
         self.trainedepoches=0
         self.compiled=False
         self.checkpointcounter=0
-        self.renewtokens=renewtokens
+        #self.renewtokens=renewtokens
+        self.renewtokens=False
         
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
@@ -117,10 +121,14 @@ class training_base(object):
         isNewTraining=True
         if os.path.isdir(self.outputDir):
             if not resumeSilently:
-                var = raw_input('output dir exists. To recover a training, please type "yes"\n')
-                if not var == 'yes':
+                var = raw_input('Output dir exists. To recover a training, please type "yes"\n To overwrite a training, please type "continue"\n')
+                if var == 'yes':
+			isNewTraining=False
+		elif var == 'continue':
+			shutil.rmtree(self.outputDir)		
+		else:
                     raise Exception('output directory must not exists yet')
-            isNewTraining=False     
+            #isNewTraining=False     
         else:
             os.mkdir(self.outputDir)
         self.outputDir = os.path.abspath(self.outputDir)
@@ -140,7 +148,7 @@ class training_base(object):
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.002)
+            self.train_data.split(0.02)
             
         self.val_data=self.train_data.split(splittrainandtest)
         
@@ -177,12 +185,14 @@ class training_base(object):
     def modelSet(self):
         return not self.keras_model==None
         
-    def setModel(self,model,**modelargs):
+    def setModel(self,model, datasets = None, removedVars = None, **modelargs):
         if len(self.keras_inputs)<1:
             raise Exception('setup data first') 
         self.keras_model=model(self.keras_inputs,
                                self.train_data.getNClassificationTargets(),
                                self.train_data.getNRegressionTargets(),
+			       datasets,
+			       removedVars,
                                **modelargs)
         if not self.keras_model:
             raise Exception('Setting model not successful') 
@@ -202,6 +212,9 @@ class training_base(object):
         self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
+
+    def loadWeights(self,filename):
+        self.keras_model.load_weights(filename, by_name=True)
         
     def compileModel(self,
                      learningrate,
