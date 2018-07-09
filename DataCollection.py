@@ -16,7 +16,7 @@ import copy
 from Losses import NBINS, MMAX, MMIN
 
 usenewformat=True
-decor=True
+decor=False
 
 # super not-generic without safety belts
 #needs some revision
@@ -578,8 +578,8 @@ class DataCollection(object):
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
-        if 'max' in os.getenv('HOSTNAME'):
-            nchilds=int(cpu_count()/3)-2
+        #f 'max' in os.getenv('HOSTNAME'):
+        #    nchilds=int(cpu_count()/3)-2
         if nchilds<1: 
             nchilds=1
         
@@ -720,7 +720,6 @@ class DataCollection(object):
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
-                
                 self.filelist=filelist
                 self.nfiles=len(filelist)
                 self.max=min(maxopen,len(filelist))
@@ -738,6 +737,7 @@ class DataCollection(object):
                 
             def start(self):
                 if self.max < 1:
+                    print(self.max)
                     raise ValueError('I got an invalid number of files to open (%d)' % self.max)
                 for i in range(self.max):
                     self.__readNext()
@@ -857,7 +857,8 @@ class DataCollection(object):
         filelist=[]
         for s in self.samples:
             filelist.append(self.getSamplePath(s))
-        
+
+        self.maxFilesOpen = 2
         TDReader=tdreader(filelist, self.maxFilesOpen, self.dataclass)
         
         #print('generator: total batches '+str(totalbatches))
