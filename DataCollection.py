@@ -15,8 +15,8 @@ from pdb import set_trace
 import copy
 from Losses import NBINS, MMAX, MMIN
 
-usenewformat=True
-decor=True
+usenewformat=False
+decor=False
 
 # super not-generic without safety belts
 #needs some revision
