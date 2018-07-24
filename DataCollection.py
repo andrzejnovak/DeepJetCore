@@ -16,7 +16,7 @@ import copy
 from Losses import NBINS, MMAX, MMIN
 
 usenewformat=False
-decor=False
+#decor=True
 
 # super not-generic without safety belts
 #needs some revision
@@ -48,9 +48,11 @@ class DataCollection(object):
         self.useRelativePaths=useRelativePaths
         self.nprocs = nprocs       
         self.meansnormslimit=500000 
+	self.decor = False 
         if infile:
             self.readFromFile(infile)
         
+
     def clear(self):
         self.samples=[]
         self.sampleentries=[]
@@ -928,7 +930,7 @@ class DataCollection(object):
                         dimw=0
                     zstored=td.z
                     dimz=len(zstored)
-                    if not decor:
+                    if not self.decor:
                         dimz=0
 
                     binWidth = (MMAX-MMIN)/NBINS
@@ -944,7 +946,7 @@ class DataCollection(object):
                         hystored[0][ii,NBINS] = ystored[0][ii,0]
                         hystored[0][ii,NBINS+1] = ystored[0][ii,1]
                     dimhy=len(hystored)
-                    if not decor:
+                    if not self.decor:
                         dimhy=0
                     xout=[]
                     yout=[]
@@ -1091,11 +1093,11 @@ class DataCollection(object):
                     xout[-1]=batchgen.generateBatch()
                     
             
-            if self.useweights and decor:
+            if self.useweights and self.decor:
                 yield (xout,hyout,wout)
             elif self.useweights:
                 yield (xout,yout,wout)
-            elif decor:
+            elif self.decor:
                 yield (xout,hyout)
             else:
                 yield (xout,yout)
