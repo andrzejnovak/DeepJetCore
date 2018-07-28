@@ -13,9 +13,10 @@ from TrainData import TrainData, fileTimeOut
 import logging
 from pdb import set_trace
 import copy
+from Losses import NBINS, MMAX, MMIN
 
 usenewformat=False
-
+#decor=True
 
 # super not-generic without safety belts
 #needs some revision
@@ -47,9 +48,11 @@ class DataCollection(object):
         self.useRelativePaths=useRelativePaths
         self.nprocs = nprocs       
         self.meansnormslimit=500000 
+	self.decor = False 
         if infile:
             self.readFromFile(infile)
         
+
     def clear(self):
         self.samples=[]
         self.sampleentries=[]
@@ -837,6 +840,10 @@ class DataCollection(object):
         dimy=0
         wstored=[]
         dimw=0
+        zstored=[]
+        dimz=0
+        hystored=[]
+        dimhy=0
         nextfiletoread=0
         
         target_xlistlength=len(td.getInputShapes())
@@ -844,6 +851,8 @@ class DataCollection(object):
         xout=[]
         yout=[]
         wout=[]
+        zout=[]
+        hyout=[]
         samplefilecounter=0
         
         #prepare file list
@@ -879,6 +888,10 @@ class DataCollection(object):
                 dimy=0
                 wstored=[]
                 dimw=0
+                zstored=[]
+                dimz=0
+                hystored=[]
+                dimhy=0
                 lastbatchrest=0
                 
                 
@@ -915,15 +928,41 @@ class DataCollection(object):
                     dimw=len(wstored)
                     if not self.useweights:
                         dimw=0
+                    zstored=td.z
+                    dimz=len(zstored)
+                    if not self.decor:
+                        dimz=0
+
+                    binWidth = (MMAX-MMIN)/NBINS
+                    hystored=[numpy.zeros((ystored[0].shape[0],NBINS+2))]
+                    for ii in xrange(0,ystored[0].shape[0]):
+                        # bin of mass (for kldiv loss)
+                        if zstored[0][ii,0,2]<MMIN:
+                            hystored[0][ii,0]=1
+                        elif zstored[0][ii,0,2]>MMAX:
+                            hystored[0][ii,NBINS-1]=1
+                        else:
+                            hystored[0][ii,int((zstored[0][ii,0,2]-MMIN)/binWidth)]=1
+                        hystored[0][ii,NBINS] = ystored[0][ii,0]
+                        hystored[0][ii,NBINS+1] = ystored[0][ii,1]
+                    dimhy=len(hystored)
+                    if not self.decor:
+                        dimhy=0
                     xout=[]
                     yout=[]
                     wout=[]
+                    zout=[]
+                    hyout=[]
                     for i in range(0,dimx):
                         xout.append([])
                     for i in range(0,dimy):
                         yout.append([])
                     for i in range(0,dimw):
                         wout.append([])
+                    for i in range(0,dimz):
+                        zout.append([])                        
+                    for i in range(0,dimhy):
+                        hyout.append([])
                         
                 else:
                     
@@ -935,8 +974,8 @@ class DataCollection(object):
                             td.y[i]=shuffle(td.y[i], random_state=psamples)
                         for i in range(0,dimw):
                             td.w[i]=shuffle(td.w[i], random_state=psamples)
-                    
-                    
+                        for i in range(0,dimz):
+                            td.z[i]=shuffle(td.z[i], random_state=psamples)                    
                     
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
@@ -955,6 +994,26 @@ class DataCollection(object):
                             wstored[i] = numpy.append(wstored[i],td.w[i])
                         else:
                             wstored[i] = numpy.vstack((wstored[i],td.w[i]))
+
+                    for i in range(0,dimz):
+                        if(zstored[i].ndim==1):
+                            zstored[i] = numpy.append(zstored[i],td.z[i])
+                        else:
+                            zstored[i] = numpy.vstack((zstored[i],td.z[i]))
+
+                    binWidth = float(MMAX-MMIN)/NBINS
+                    hy=[numpy.zeros((td.y[0].shape[0],NBINS+2))]
+                    for ii in xrange(0,td.y[0].shape[0]):
+                        # bin of mass (for kldiv loss)
+                        if td.z[0][ii,0,2]<MMIN:
+                            hy[0][ii,0]=1
+                        elif td.z[0][ii,0,2]>MMAX:
+                            hy[0][ii,NBINS-1]=1
+                        else:
+                            hy[0][ii,int((td.z[0][ii,0,2]-MMIN)/binWidth)]=1
+                        hy[0][ii,NBINS] = td.y[0][ii,0]
+                        hy[0][ii,NBINS+1] = td.y[0][ii,1]
+                    hystored[0] = numpy.vstack((hystored[0],hy[0]))
                     
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
@@ -985,6 +1044,14 @@ class DataCollection(object):
                     splitted=numpy.split(wstored[i],[self.__batchsize])
                     wstored[i] = splitted[1]
                     wout[i] = splitted[0]
+                for i in range(0,dimz):
+                    splitted=numpy.split(zstored[i],[self.__batchsize])
+                    zstored[i] = splitted[1]
+                    zout[i] = splitted[0]                    
+                for i in range(0,dimhy):
+                    splitted=numpy.split(hystored[i],[self.__batchsize])
+                    hystored[i] = splitted[1]
+                    hyout[i] = splitted[0]
             
             for i in range(0,dimx):
                 if(xout[i].ndim==1):
@@ -1001,9 +1068,21 @@ class DataCollection(object):
             for i in range(0,dimw):
                 if(wout[i].ndim==1):
                     wout[i]=(wout[i].reshape(wout[i].shape[0],1))
-                if not xout[i].shape[1] >0:
+                if not wout[i].shape[1] >0:
                     raise Exception('serious problem with the output shapes!!')
-            
+
+            for i in range(0,dimz):
+                if(zout[i].ndim==1):
+                    zout[i]=(zout[i].reshape(zout[i].shape[0],1))
+                if not zout[i].shape[1] >0:
+                    raise Exception('serious problem with the output shapes!!')
+
+            for i in range(0,dimhy):
+                if(hyout[i].ndim==1):
+                    hyout[i]=(hyout[i].reshape(hyout[i].shape[0],1))
+                if not hyout[i].shape[1] >0:
+                    raise Exception('serious problem with the output shapes!!')
+
             processedbatches+=1
             
             
@@ -1014,8 +1093,12 @@ class DataCollection(object):
                     xout[-1]=batchgen.generateBatch()
                     
             
-            if self.useweights:
+            if self.useweights and self.decor:
+                yield (xout,hyout,wout)
+            elif self.useweights:
                 yield (xout,yout,wout)
+            elif self.decor:
+                yield (xout,hyout)
             else:
                 yield (xout,yout)
             

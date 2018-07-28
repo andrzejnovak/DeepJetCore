@@ -28,6 +28,7 @@ class Weighter(object):
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
+        self.removeUnderOverflow=False
     
     def __eq__(self, other):
         'A == B'
@@ -229,13 +230,9 @@ class Weighter(object):
                 if  useonlyoneclass or 1 == jet[classs]:
                     rand=numpy.random.ranf()
                     prob = self.removeProbabilties[index][binX][binY]
-		    #print (prob)
-                   
-		    #if counter < 5: print(rand, prob)  
-                    if jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]:
+                    if self.removeUnderOverflow and (jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]):
+                        #print("over/underflow")
                         notremove[counter]=0
-			out = True
-                        # will remove out of bounds event
                     elif rand < prob and index != self.refclassidx:
                         notremove[counter]=0
 			rem = True

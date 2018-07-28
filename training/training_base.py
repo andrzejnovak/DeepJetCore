@@ -48,8 +48,9 @@ class training_base(object):
 				useweights=False, testrun=False,
 				resumeSilently=False, 
 				renewtokens=False,
+				decorrelate=False,
 				collection_class=DataCollection,
-				parser=None
+				parser=None,
 				):
         
         if parser is None: 
@@ -144,11 +145,12 @@ class training_base(object):
             
             
         self.train_data = collection_class()
+	self.train_data.decor = decorrelate
         self.train_data.readFromFile(self.inputData)
         self.train_data.useweights=useweights
         
         if testrun:
-            self.train_data.split(0.002)
+            self.train_data.split(0.02)
             
         self.val_data=self.train_data.split(splittrainandtest)
         
@@ -212,6 +214,9 @@ class training_base(object):
         self.keras_model=load_model(filename, custom_objects=custom_objects_list)
         self.optimizer=self.keras_model.optimizer
         self.compiled=True
+
+    def loadWeights(self,filename):
+        self.keras_model.load_weights(filename, by_name=True)
         
     def compileModel(self,
                      learningrate,
@@ -307,8 +312,10 @@ class training_base(object):
         #self.keras_model.save(self.outputDir+'KERAS_check_last_model.h5')
         print('setting up callbacks')
         from .DeepJet_callbacks import DeepJet_callbacks
-        
-        
+
+        minTokenLifetime=5
+        if self.renewtokens==False:
+            minTokenLifetime=0
         callbacks=DeepJet_callbacks(self.keras_model,
                                     stop_patience=stop_patience, 
                                     lr_factor=lr_factor,
@@ -317,6 +324,7 @@ class training_base(object):
                                     lr_cooldown=lr_cooldown, 
                                     lr_minimum=lr_minimum,
                                     outputDir=self.outputDir,
+                                    minTokenLifetime=minTokenLifetime,                                
                                     checkperiod=checkperiod)
         nepochs=nepochs-self.trainedepoches
         print('starting training')

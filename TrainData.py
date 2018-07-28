@@ -131,6 +131,7 @@ class TrainData(object):
         
         self.remove=True    
         self.weight=False
+        self.removeUnderOverflow=False
         
         self.clear()
         
@@ -686,6 +687,7 @@ class TrainData(object):
         from Weighter import Weighter
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
+        weighter.removeUnderOverflow = self.removeUnderOverflow
         
         if self.remove or self.weight:
             weighter.setBinningAndClasses(
