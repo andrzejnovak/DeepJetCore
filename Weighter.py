@@ -266,7 +266,8 @@ class Weighter(object):
         
         useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0
 	count_out = 0
-        
+       
+	incomplete_class_phasespace = False 
         for jet in iter(Tuple[self.Axixandlabel]):
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
