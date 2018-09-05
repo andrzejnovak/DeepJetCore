@@ -161,9 +161,6 @@ class Weighter(object):
         for i in range(len(self.classes)):
             bin_counts.append(self.distributions[i])
 	bin_min = numpy.array(numpy.minimum.reduce(bin_counts))
-	print("Minimimum events per bin")
-	print(bin_min)
-	print ("Weights:")
         for i in range(len(self.classes)):
             tmphist=self.distributions[i]
             if referenceclass=="lowest": 
@@ -178,10 +175,11 @@ class Weighter(object):
             ratio[ratio<0]=1
             ratio[ratio==numpy.nan]=1
             weighthists.append(ratio)
-            ratio=1-ratio#make it a remove probability
-            probhists.append(ratio)
-	    print(self.classes[i])
-	    print(ratio) 
+            probhists.append(1-ratio)
+	print ("Weights:")
+	numpy.set_printoptions(precision=3, suppress=True)
+	print(["Min evts per bin"] + self.classes)
+	print(numpy.column_stack(tuple([bin_min] + weighthists))) 
         self.removeProbabilties=probhists
         self.binweights=weighthists
         
@@ -257,7 +255,6 @@ class Weighter(object):
         
     def getJetWeights(self,Tuple):
         import numpy
-        countMissedJets = 0  
         if len(self.binweights) <1:
             raise Exception('weight bins not initialised. Cannot create weights per jet')
         
@@ -275,25 +272,27 @@ class Weighter(object):
 	    out = False
             for index, classs in enumerate(self.classes):
                 if 1 == jet[classs] or useonlyoneclass:
-                    if self.removeUnderOverflow and (jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]):
-                    #if jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]:
+                    jet_out_of_range = (jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1])
+                    #if self.removeUnderOverflow and (jet[self.nameX] < self.axisX[0] or jet[self.nameY] < self.axisY[0] or jet[self.nameX] > self.axisX[-1] or jet[self.nameY] > self.axisY[-1]):
+                    if self.removeUnderOverflow and jet_out_of_range:
                     	weight[jetcount]=0
 			out = True
 		    else:
 	                weight[jetcount]=(self.binweights[index][binX][binY])
+		#else: 
+                #    	weight[jetcount]=0
 		
-		elif sum([jet[classs] for classs in self.classes])==0:
-		    incomplete_class_phasespace = True
-	    
+	    if sum([jet[classs] for classs in self.classes])==0:
+	 	incomplete_class_phasespace = True
 	    if out: count_out +=1
+
             jetcount=jetcount+1        
 
-	print('Under/Overflow:  {} % '.format(round(count_out/float(jetcount)*100)) )
-	
-	if incomplete_class_phasespace:
-	    print("WARNING: Defined truth classes don't sum up to 1 in probability")
+	if self.removeUnderOverflow: print('Under/Overflow:  {} % '.format(round(count_out/float(jetcount)*100,2)))
+	if incomplete_class_phasespace: print("WARNING: Defined truth classes don't sum up to 1 in probability")
         
-	print ('weight average: ',weight.mean())
+	print('Weight average: ',weight.mean())
+	print('Weight average (non-zero-only): ',weight[weight > 0].mean())
         return weight
         
         
