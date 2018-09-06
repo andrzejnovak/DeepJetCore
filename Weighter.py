@@ -28,6 +28,7 @@ class Weighter(object):
         self.classes=[]
         self.refclassidx=0
         self.undefTruth=[]
+	self.ignore_when_weighting=[]
         self.removeUnderOverflow=False
     
     def __eq__(self, other):
@@ -159,6 +160,7 @@ class Weighter(object):
 	
 	bin_counts = []
         for i in range(len(self.classes)):
+	    if self.classes[i] in self.ignore_when_weighting:  continue
             bin_counts.append(self.distributions[i])
 	bin_min = numpy.array(numpy.minimum.reduce(bin_counts))
         for i in range(len(self.classes)):

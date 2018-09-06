@@ -131,6 +131,7 @@ class TrainData(object):
         
         self.remove=True    
         self.weight=False
+        self.ignore_when_weighting=[] #for use with referenceclass='lowest'
         self.removeUnderOverflow=False
         
         self.clear()
@@ -687,6 +688,7 @@ class TrainData(object):
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
         weighter.removeUnderOverflow = self.removeUnderOverflow
+        weighter.ignore_when_weighting = self.ignore_when_weighting
         
         if self.remove or self.weight:
             weighter.setBinningAndClasses(
