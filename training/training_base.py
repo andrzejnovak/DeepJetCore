@@ -48,7 +48,6 @@ class training_base(object):
 				useweights=False, testrun=False,
 				resumeSilently=False, 
 				renewtokens=False,
-				decorrelate=False,
 				collection_class=DataCollection,
 				parser=None,
 				):
@@ -145,7 +144,6 @@ class training_base(object):
             
             
         self.train_data = collection_class()
-	self.train_data.decor = decorrelate
         self.train_data.readFromFile(self.inputData)
         self.train_data.useweights=useweights
         
@@ -334,7 +332,7 @@ class training_base(object):
                             callbacks=callbacks.callbacks,
                             validation_data=self.val_data.generator(),
                             validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                            max_q_size=maxqsize,**trainargs)
+                            max_queue_size=maxqsize,**trainargs)
         
         
         self.saveModel("KERAS_model.h5")

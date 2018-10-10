@@ -6,7 +6,7 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from __future__ import print_function
-
+import os
 from Weighter import Weighter
 from TrainData import TrainData, fileTimeOut
 #for convenience
@@ -16,7 +16,14 @@ import copy
 from Losses import NBINS, MMAX, MMIN
 
 usenewformat=False
-#decor=True
+#decor=False
+try: 
+	print(os.environ['DECORRELATE'])
+	decor = eval(os.environ['DECORRELATE'])
+except: 
+	decor = False
+print("Decor", decor)
+
 
 # super not-generic without safety belts
 #needs some revision
@@ -48,7 +55,6 @@ class DataCollection(object):
         self.useRelativePaths=useRelativePaths
         self.nprocs = nprocs       
         self.meansnormslimit=500000 
-	self.decor = False 
         if infile:
             self.readFromFile(infile)
         
@@ -580,8 +586,8 @@ class DataCollection(object):
         
         nchilds = int(cpu_count()/2)-2 if self.nprocs <= 0 else self.nprocs
         #import os
-        if 'max' in os.getenv('HOSTNAME'):
-            nchilds=int(cpu_count()/3)-2
+        #f 'max' in os.getenv('HOSTNAME'):
+        #    nchilds=int(cpu_count()/3)-2
         if nchilds<1: 
             nchilds=1
         
@@ -722,7 +728,6 @@ class DataCollection(object):
         #helper class
         class tdreader(object):
             def __init__(self,filelist,maxopen,tdclass):
-                
                 self.filelist=filelist
                 self.nfiles=len(filelist)
                 self.max=min(maxopen,len(filelist))
@@ -740,6 +745,7 @@ class DataCollection(object):
                 
             def start(self):
                 if self.max < 1:
+                    print(self.max)
                     raise ValueError('I got an invalid number of files to open (%d)' % self.max)
                 for i in range(self.max):
                     self.__readNext()
@@ -859,7 +865,8 @@ class DataCollection(object):
         filelist=[]
         for s in self.samples:
             filelist.append(self.getSamplePath(s))
-        
+
+        self.maxFilesOpen = 2
         TDReader=tdreader(filelist, self.maxFilesOpen, self.dataclass)
         
         #print('generator: total batches '+str(totalbatches))
@@ -930,7 +937,7 @@ class DataCollection(object):
                         dimw=0
                     zstored=td.z
                     dimz=len(zstored)
-                    if not self.decor:
+                    if not decor:
                         dimz=0
 
                     binWidth = (MMAX-MMIN)/NBINS
@@ -946,7 +953,7 @@ class DataCollection(object):
                         hystored[0][ii,NBINS] = ystored[0][ii,0]
                         hystored[0][ii,NBINS+1] = ystored[0][ii,1]
                     dimhy=len(hystored)
-                    if not self.decor:
+                    if not decor:
                         dimhy=0
                     xout=[]
                     yout=[]
@@ -1093,11 +1100,11 @@ class DataCollection(object):
                     xout[-1]=batchgen.generateBatch()
                     
             
-            if self.useweights and self.decor:
+            if self.useweights and decor:
                 yield (xout,hyout,wout)
             elif self.useweights:
                 yield (xout,yout,wout)
-            elif self.decor:
+            elif decor:
                 yield (xout,hyout)
             else:
                 yield (xout,yout)
