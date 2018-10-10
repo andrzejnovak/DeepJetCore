@@ -467,14 +467,14 @@ def MeanNormZeroPadParticles(Filename_in,MeanNormTuple,inbranches,nMax,nevents):
         if MeanNormTuple is None:
             means.append(0)
             norms.append(1)
-        else:
+        elif numpy.isnan(MeanNormTuple[b][0]) or numpy.isnan(MeanNormTuple[b][1]):
+            means.append(0)
+            norms.append(1)
+	else:
             means.append(MeanNormTuple[b][0])
             norms.append(MeanNormTuple[b][1])
     
-    
     c_meanNormZeroPad.particlecluster(array,[norms],[means],[inbranches],[nMax],Filename_in)
-   
-    
    
     return array
 

@@ -265,8 +265,8 @@ class Weighter(object):
         
         useonlyoneclass=len(self.classes)==1 and len(self.classes[0])==0
 	count_out = 0
+	count_undef = 0
        
-	incomplete_class_phasespace = False 
         for jet in iter(Tuple[self.Axixandlabel]):
             binX =  self.getBin(jet[self.nameX], self.axisX)
             binY =  self.getBin(jet[self.nameY], self.axisY)
@@ -286,15 +286,19 @@ class Weighter(object):
 		
 	    if sum([jet[classs] for classs in self.classes])==0:
 	 	incomplete_class_phasespace = True
+		count_undef += 1
 	    if out: count_out +=1
 
             jetcount=jetcount+1        
 
 	if self.removeUnderOverflow: print('Under/Overflow:  {} % '.format(round(count_out/float(jetcount)*100,2)))
-	if incomplete_class_phasespace: print("WARNING: Defined truth classes don't sum up to 1 in probability")
+	if count_undef > 0: 
+		print("WARNING: Defined truth classes don't sum up to 1 in probability")
+		print('Undefined:  {} % '.format(round(count_undef/float(jetcount)*100,2)))
         
 	print('Weight average: ',weight.mean())
 	print('Weight average (non-zero-only): ',weight[weight > 0].mean())
+	print('Fraction of 0 weights: ', len(weight[weight == 0])/float(len(weight)))
         return weight
         
         
