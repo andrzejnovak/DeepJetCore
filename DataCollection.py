@@ -6,7 +6,7 @@ Created on 21 Feb 2017
 #from tensorflow.contrib.labeled_tensor import batch
 #from builtins import list
 from __future__ import print_function
-
+import os
 from Weighter import Weighter
 from TrainData import TrainData, fileTimeOut
 #for convenience
@@ -15,8 +15,15 @@ from pdb import set_trace
 import copy
 from Losses import NBINS, MMAX, MMIN
 
-usenewformat=True
-decor=False
+usenewformat=False
+#decor=False
+try: 
+	print(os.environ['DECORRELATE'])
+	decor = eval(os.environ['DECORRELATE'])
+except: 
+	decor = False
+print("Decor", decor)
+
 
 # super not-generic without safety belts
 #needs some revision
@@ -51,6 +58,7 @@ class DataCollection(object):
         if infile:
             self.readFromFile(infile)
         
+
     def clear(self):
         self.samples=[]
         self.sampleentries=[]
