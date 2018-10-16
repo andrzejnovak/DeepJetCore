@@ -659,9 +659,8 @@ class TrainData(object):
                 stop = limit,
                 branches = usebranches
                 )
-            print('done add files')
+	    print('done add files')
             return nparray
-            print('add files')
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile.Open(filenames)
