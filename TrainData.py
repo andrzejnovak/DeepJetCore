@@ -131,6 +131,7 @@ class TrainData(object):
         
         self.remove=True    
         self.weight=False
+        self.ignore_when_weighting=[] #for use with referenceclass='lowest'
         self.removeUnderOverflow=False
         
         self.clear()
@@ -646,7 +647,6 @@ class TrainData(object):
             if len(b):
                 tmpbb.append(b)
         usebranches=tmpbb
-            
         import ROOT
         from root_numpy import tree2array, root2array
         if isinstance(filenames, list):
@@ -659,9 +659,8 @@ class TrainData(object):
                 stop = limit,
                 branches = usebranches
                 )
-            print('done add files')
+	    print('done add files')
             return nparray
-            print('add files')
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
             rfile = ROOT.TFile.Open(filenames)
@@ -688,12 +687,14 @@ class TrainData(object):
         weighter = Weighter() 
         weighter.undefTruth = self.undefTruth
         weighter.removeUnderOverflow = self.removeUnderOverflow
+        weighter.ignore_when_weighting = self.ignore_when_weighting
         
         if self.remove or self.weight:
             weighter.setBinningAndClasses(
                 [self.weight_binX,self.weight_binY],
                 self.weightbranchX,self.weightbranchY,
-                self.truthclasses
+                #self.truthclasses
+                self.reducedtruthclasses
                 )
         return weighter
 
@@ -701,14 +702,27 @@ class TrainData(object):
     def produceBinWeighter(self,filenames):
         weighter = self.make_empty_weighter()
         branches = [self.weightbranchX,self.weightbranchY]
-        branches.extend(self.truthclasses)
         showprog=ShowProgress(5,len(filenames))
         counter=0
         if self.remove or self.weight:
             for fname in filenames:
-                nparray = self.readTreeFromRootToTuple(fname, branches=branches)
-                weighter.addDistributions(nparray, referenceclass=self.referenceclass)
-                del nparray
+                # Read truths 
+		truth_array = self.readTreeFromRootToTuple(fname, branches=self.truthclasses)
+		# Use defined reduced truths
+		reduced_array = self.reduceTruth(truth_array)
+		dtype = zip(self.reducedtruthclasses, [col.dtype for col in reduced_array.transpose()])
+		reduced_array = reduced_array.ravel().view(dtype)		
+		# Read variables to weight along
+		weight_along_array = self.readTreeFromRootToTuple(fname, branches=branches)
+		# Merge two arrays
+		import numpy.lib.recfunctions as rfn
+		nparray = rfn.merge_arrays([reduced_array, weight_along_array],  flatten = True, usemask = False)
+
+               	weighter.addDistributions(nparray, referenceclass=self.referenceclass) 
+		del nparray
+		del truth_array
+		del weight_along_array
+		del reduced_array
                 showprog.show(counter)
                 counter=counter+1
             weighter.createRemoveProbabilitiesAndWeights(self.referenceclass)
