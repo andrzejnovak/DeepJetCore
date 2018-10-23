@@ -374,7 +374,7 @@ class DataCollection(object):
         import copy
         self.readFromFile(collectionfile)
         self.dataclass.remove=False
-        self.dataclass.weight=False #True #False
+        self.dataclass.weight=False 
         self.readRootListFromFile(inputfile)
         self.createDataFromRoot(
             self.dataclass, outputDir, False,
@@ -930,6 +930,7 @@ class DataCollection(object):
                     ystored=td.y
                     dimy=len(ystored)
                     wstored=td.w
+		    wstored = [wstored[0].reshape(wstored[0].shape[0])]
                     dimw=len(wstored)
                     if not self.useweights:
                         dimw=0
@@ -972,6 +973,7 @@ class DataCollection(object):
                 else:
                     
                     #randomly^2 shuffle - not needed every time
+		    #print("RANDOM SHUFFLE")
                     if psamples%2==0 and nepoch%2==1:
                         for i in range(0,dimx):
                             td.x[i]=shuffle(td.x[i], random_state=psamples)
@@ -981,7 +983,6 @@ class DataCollection(object):
                             td.w[i]=shuffle(td.w[i], random_state=psamples)
                         for i in range(0,dimz):
                             td.z[i]=shuffle(td.z[i], random_state=psamples)                    
-                    
                     for i in range(0,dimx):
                         if(xstored[i].ndim==1):
                             xstored[i] = numpy.append(xstored[i],td.x[i])
@@ -999,7 +1000,7 @@ class DataCollection(object):
                             wstored[i] = numpy.append(wstored[i],td.w[i])
                         else:
                             wstored[i] = numpy.vstack((wstored[i],td.w[i]))
-
+			 
                     for i in range(0,dimz):
                         if(zstored[i].ndim==1):
                             zstored[i] = numpy.append(zstored[i],td.z[i])
@@ -1019,7 +1020,7 @@ class DataCollection(object):
                         hy[0][ii,NBINS] = td.y[0][ii,0]
                         hy[0][ii,NBINS+1] = td.y[0][ii,1]
                     hystored[0] = numpy.vstack((hystored[0],hy[0]))
-                    
+                   
                 if xstored[0].shape[0] >= self.__batchsize:
                     batchcomplete = True
                     
@@ -1057,7 +1058,7 @@ class DataCollection(object):
                     splitted=numpy.split(hystored[i],[self.__batchsize])
                     hystored[i] = splitted[1]
                     hyout[i] = splitted[0]
-            
+	        
             for i in range(0,dimx):
                 if(xout[i].ndim==1):
                     xout[i]=(xout[i].reshape(xout[i].shape[0],1)) 
@@ -1070,12 +1071,6 @@ class DataCollection(object):
                 if not yout[i].shape[1] >0:
                     raise Exception('serious problem with the output shapes!!')
                     
-            for i in range(0,dimw):
-                if(wout[i].ndim==1):
-                    wout[i]=(wout[i].reshape(wout[i].shape[0],1))
-                if not wout[i].shape[1] >0:
-                    raise Exception('serious problem with the output shapes!!')
-
             for i in range(0,dimz):
                 if(zout[i].ndim==1):
                     zout[i]=(zout[i].reshape(zout[i].shape[0],1))
@@ -1087,7 +1082,6 @@ class DataCollection(object):
                     hyout[i]=(hyout[i].reshape(hyout[i].shape[0],1))
                 if not hyout[i].shape[1] >0:
                     raise Exception('serious problem with the output shapes!!')
-
             processedbatches+=1
             
             
@@ -1101,12 +1095,11 @@ class DataCollection(object):
             if self.useweights and decor:
                 yield (xout,hyout,wout)
             elif self.useweights:
-                yield (xout,yout,wout)
+		yield (xout,yout,wout)
             elif decor:
                 yield (xout,hyout)
             else:
                 yield (xout,yout)
-            
             
 
     
