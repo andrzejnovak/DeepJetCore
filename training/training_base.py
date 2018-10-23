@@ -124,11 +124,10 @@ class training_base(object):
                 var = raw_input('Output dir exists. To recover a training, please type "yes"\n To overwrite a training, please type "continue"\n')
                 if var == 'yes':
 			isNewTraining=False
-		elif var == 'continue':
-			shutil.rmtree(self.outputDir)		
 		else:
                     raise Exception('output directory must not exists yet')
-            #isNewTraining=False     
+            #else:
+	#	isNewTraining=False     
         else:
             os.mkdir(self.outputDir)
         self.outputDir = os.path.abspath(self.outputDir)

@@ -305,8 +305,6 @@ class TrainData(object):
             print('\nTrainData::readIn_async: started new read before old was finished. Intended? Waiting for first to finish...\n')
             self.readIn_join()
             
-        #print('read')
-        
         import h5py
         import multiprocessing
         
@@ -626,7 +624,6 @@ class TrainData(object):
         self.y_list=None
         self.z_list=None
         self.readthread=None
-        
         
     def readTreeFromRootToTuple(self, filenames, limit=None, branches=None):
         '''
