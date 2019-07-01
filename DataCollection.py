@@ -940,7 +940,8 @@ class DataCollection(object):
                         dimz=0
 
                     binWidth = (MMAX-MMIN)/NBINS
-                    hystored=[numpy.zeros((ystored[0].shape[0],NBINS+2))]
+                    nClasses = ystored[0].shape[1]
+                    hystored=[numpy.zeros((ystored[0].shape[0],NBINS+nClasses))]
                     for ii in xrange(0,ystored[0].shape[0]):
                         # bin of mass (for kldiv loss)
                         if zstored[0][ii,0,2]<MMIN:
@@ -949,8 +950,8 @@ class DataCollection(object):
                             hystored[0][ii,NBINS-1]=1
                         else:
                             hystored[0][ii,int((zstored[0][ii,0,2]-MMIN)/binWidth)]=1
-                        hystored[0][ii,NBINS] = ystored[0][ii,0]
-                        hystored[0][ii,NBINS+1] = ystored[0][ii,1]
+                        for jj in range(nClasses):
+                            hystored[0][ii,NBINS+jj] = ystored[0][ii,jj]
                     dimhy=len(hystored)
                     if not decor:
                         dimhy=0
@@ -1008,7 +1009,8 @@ class DataCollection(object):
                             zstored[i] = numpy.vstack((zstored[i],td.z[i]))
 
                     binWidth = float(MMAX-MMIN)/NBINS
-                    hy=[numpy.zeros((td.y[0].shape[0],NBINS+2))]
+                    nClasses = td.y[0].shape[1]
+                    hy=[numpy.zeros((td.y[0].shape[0],NBINS+nClasses))]
                     for ii in xrange(0,td.y[0].shape[0]):
                         # bin of mass (for kldiv loss)
                         if td.z[0][ii,0,2]<MMIN:
@@ -1017,8 +1019,8 @@ class DataCollection(object):
                             hy[0][ii,NBINS-1]=1
                         else:
                             hy[0][ii,int((td.z[0][ii,0,2]-MMIN)/binWidth)]=1
-                        hy[0][ii,NBINS] = td.y[0][ii,0]
-                        hy[0][ii,NBINS+1] = td.y[0][ii,1]
+                        for jj in range(nClasses):
+                            hy[0][ii,NBINS+jj] = td.y[0][ii,jj]
                     hystored[0] = numpy.vstack((hystored[0],hy[0]))
                    
                 if xstored[0].shape[0] >= self.__batchsize:
