@@ -70,6 +70,7 @@ class training_base(object):
         import matplotlib
         #if no X11 use below
         matplotlib.use('Agg')
+
         if args.gpu<0:
             import imp
             try:
@@ -108,8 +109,7 @@ class training_base(object):
         self.trainedepoches=0
         self.compiled=False
         self.checkpointcounter=0
-        #self.renewtokens=renewtokens
-        self.renewtokens=False
+        self.renewtokens=renewtokens
         
         
         self.inputData = os.path.abspath(args.inputDataCollection) \
@@ -158,8 +158,6 @@ class training_base(object):
         
         self.keras_inputs=[]
         self.keras_inputsshapes=[]
-        
-        print(shapes)
         
         for s in shapes:
             self.keras_inputs.append(keras.layers.Input(shape=s))
@@ -325,13 +323,18 @@ class training_base(object):
                                     checkperiod=checkperiod)
         nepochs=nepochs-self.trainedepoches
         print('starting training')
+        import keras
+        if keras.__version__=='2.0.0':
+            trainargs.update({'max_q_size':maxqsize})
+        else:
+            trainargs.update({'max_queue_size':maxqsize})
         self.keras_model.fit_generator(self.train_data.generator() ,
                             steps_per_epoch=self.train_data.getNBatchesPerEpoch(), 
                             epochs=nepochs,
                             callbacks=callbacks.callbacks,
                             validation_data=self.val_data.generator(),
                             validation_steps=self.val_data.getNBatchesPerEpoch(), #)#,
-                            max_queue_size=maxqsize,**trainargs)
+                            **trainargs)                            
         
         
         self.saveModel("KERAS_model.h5")

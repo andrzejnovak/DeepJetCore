@@ -14,18 +14,17 @@ Setup python packages (CERN)
 It is essential to perform all these steps on lxplus7. Simple ssh to 'lxplus7' instead of 'lxplus'
 
 Pre-Installtion: Anaconda setup (only once)
-Download miniconda3
+Download miniconda3 (you can also get 2, but support ends at the end of this year)
 ```
 cd <afs work directory: you need some disk space for this!>
-wget https://repo.continuum.io/miniconda/Miniconda2-latest-Linux-x86_64.sh
-bash Miniconda2-latest-Linux-x86_64.sh
-# You can also use miniconda3 if you prefer python 3 as your default
+wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
 ```
 Please follow the installation process. If you don't know what an option does, please answer 'yes'.
 After installation, you have to log out and log in again for changes to take effect.
 If you don't use bash, you might have to add the conda path to your .rc file
 ```
-export PATH="<your miniconda directory>/miniconda2/bin:$PATH"
+export PATH="<your miniconda directory>/miniconda3/bin:$PATH"
 ```
 This has to be only done once.
 
@@ -35,7 +34,7 @@ Installation:
 ```
 mkdir <your working dir>
 cd <your working dir>
-git clone https://github.com/DL4Jets/DeepJetCore
+git clone https://github.com/andrzejnovak/DeepJetCore
 cd DeepJetCore/environment
 ./setupEnv.sh deepjetLinux3.conda
 ```

@@ -16,13 +16,11 @@ import copy
 from Losses import NBINS, MMAX, MMIN
 
 usenewformat=False
-#decor=False
 try: 
-	print(os.environ['DECORRELATE'])
 	decor = eval(os.environ['DECORRELATE'])
 except: 
 	decor = False
-print("Decor", decor)
+print("Using decor=", decor)
 
 
 # super not-generic without safety belts

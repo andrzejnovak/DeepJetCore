@@ -660,7 +660,7 @@ class TrainData(object):
             return nparray
         else:    
             fileTimeOut(filenames,120) #give eos a minute to recover
-            rfile = ROOT.TFile(filenames)
+            rfile = ROOT.TFile.Open(filenames)
             tree = rfile.Get(self.treename)
             if not self.nsamples:
                 self.nsamples=tree.GetEntries()
