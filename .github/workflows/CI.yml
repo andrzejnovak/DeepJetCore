@@ -31,69 +31,108 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: "Get conda"
-      uses: "conda-incubator/setup-miniconda@v2"
+    - name:  'Setup conda env'
+      uses: conda-incubator/setup-miniconda@v2
       with:
-        auto-update-conda: true
-        python-version: ${{ matrix.python-version }}
-        channels: "conda-forge"
+        activate-environment: DJC2
+        environment-file: conda_env.yml  
+        python-version: 3.6
+
+        auto-activate-base: false
 
     - name: "Test env vars"
       run: |
         conda env list
         conda info
         conda list
-    - name: Set env
-      run: echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
-    - name: Test
-      run: echo $GITHUB_SHA_SHORT
-        
+        which python
 
-    # - name: "Install conda env from yml"
-    #   run: |
-    #     conda env list
-    #     conda info
-    #     conda list
-        
-    #     conda env create -f conda_env.yml  
-    #     conda activate DJC2
-        
-    #     # normally one would `source docker_env.sh` but GHA can't do this
-    #     echo "DEEPJETCORE=$( pwd -P)" >> $GITHUB_ENV
-    #     echo "PATH=$( pwd -P)/bin:$PATH" >> $GITHUB_ENV
-    #     echo "PYTHONPATH=$( pwd -P)/../:$PYTHONPATH" >> $GITHUB_ENV
-    #     echo "LD_LIBRARY_PATH=$( pwd -P)/compiled/" >> $GITHUB_ENV
+    - name: Set env vars 1
+      run: | # echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+        # normally one would `source docker_env.sh` but GHA can't do this
+        echo "DEEPJETCORE=$( pwd -P)" >> $GITHUB_ENV
+        echo "PATH=$( pwd -P)/bin:$PATH" >> $GITHUB_ENV
+        echo "PYTHONPATH=$( pwd -P)/../:$PYTHONPATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$( pwd -P)/compiled/" >> $GITHUB_ENV
+        # just hardcode it
+        echo "PYTHONPATH=/home/runner/work/DeepJetCore/DeepJetCore/bin:/home/runner/work/DeepJetCore/DeepJetCore:/home/runner/work/DeepJetCore:$PYTHONPATH" >> $GITHUB_ENV
 
-    #     cd compiled 
-    #     make -f Makefile_conda
-    #     cd ..
-    #     echo "XXXXXXXXXXXXXXXXXXX"
-    #     echo $GITHUB_ENV
-    #     echo "PWD"
-    #     pwd 
-    #     echo $DEEPJETCORE
-    #     echo $PATH
-    #     echo $PYTHONPATH 
-    #     echo $LD_LIBRARY_PATH
-    #     echo "XXXXXXXXXXXXXXXXXXX"
+    - name: Check env vars 1
+      run: |
+        echo "DEEPJETCORE"
+        echo $DEEPJETCORE
+        echo "PATH"
+        echo $PATH
+        echo "PYTHONPATH"
+        echo $PYTHONPATH 
+        echo "LD_LIBRARY_PATH"
+        echo $LD_LIBRARY_PATH
+        python -c "import DeepJetCore"
 
-    #     python createSubpackage.py --data here
+    - name: Compile
+      run: |
+        ls $DEEPJETCORE/bin
+        cd $DEEPJETCORE
+        cd compiled 
+        make -f Makefile_conda -j4
+        ls $DEEPJETCORE/bin
 
-    #     # # normally one would `source env.sh` but GHA can't do this
-    #     # echo "HERE=/home/runner/work/DeepJetCore/DeepJetCore/here" >> $GITHUB_ENV
-    #     # echo "DEEPJETCORE_SUBPACKAGE=$HERE" >> $GITHUB_ENV
-    #     # cd $HERE
-    #     # echo "PYTHONPATH=$HERE/modules:$PYTHONPATH" >> $GITHUB_ENV
-    #     # echo "PYTHONPATH=$HERE/modules/datastructures:$PYTHONPATH" >> $GITHUB_ENV
-    #     # echo "PATH=$HERE/scripts:$PATH" >> $GITHUB_ENV
-    #     # echo "LD_LIBRARY_PATH=$HERE/modules/compiled:$LD_LIBRARY_PATH" >> $GITHUB_ENV
-    #     # echo "PYTHONPATH=$HERE/modules/compiled:$PYTHONPATH" >> $GITHUB_ENV   
+    - name: Create subpackage
+      run: |
+        python bin/createSubpackage.py --data here
+        cd here
+        pwd
+        echo "HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)" >> $GITHUB_ENV
+
+    - name: Set env vars 2
+      run: | # echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
+        # normally one would `source env.sh` but GHA can't do this
+        pwd
+        cd $DEEPJETCORE
+        cd here
+        pwd
+        echo "DEEPJETCORE_SUBPACKAGE=$HERE" >> $GITHUB_ENV    
+        echo "PYTHONPATH=$HERE/modules:$PYTHONPATH" >> $GITHUB_ENV
+        echo "PYTHONPATH=$HERE/modules/datastructures:$PYTHONPATH" >> $GITHUB_ENV
+        echo "PATH=$HERE/scripts:$PATH" >> $GITHUB_ENV
+        echo "LD_LIBRARY_PATH=$HERE/modules/compiled:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+        echo "PYTHONPATH=$HERE/modules/compiled:$PYTHONPATH" >> $GITHUB_ENV   
+
+        # just hardcode it
+        echo "PYTHONPATH=/home/runner/work/DeepJetCore/DeepJetCore/here/modules:/home/runner/work/DeepJetCore/DeepJetCore/here/modules/datastructures:/home/runner/work/DeepJetCore/DeepJetCore/here/modules/compiled:$PYTHONPATH" >> $GITHUB_ENV
           
+    - name: Check env vars 2
+      run: |
+        echo "DEEPJETCORE_SUBPACKAGE"
+        echo $DEEPJETCORE_SUBPACKAGE
+        echo "PYTHONPATH"
+        echo $PYTHONPATH
+        echo "PATH"
+        echo $PATH 
+        echo "LD_LIBRARY_PATH"
+        echo $LD_LIBRARY_PATH
+        pwd -P 
+        ls 
+        cd $DEEPJETCORE
+        pwd -P 
+        ls 
+        cd $DEEPJETCORE_SUBPACKAGE 
+        pwd -P 
+        ls
         
-    #     # python bin/convertFromSource.py -i here/example_data/train_files.txt -o here/dctrain -c TrainData_example
+
+    - name: Convert files
+      run: |   
+        pwd
+        cd $DEEPJETCORE
+        pwd
+        python bin/convertFromSource.py -i here/example_data/train_files.txt -o here/dctrain -c TrainData_example
 
     - name: "Run training"
       run: |
+        pwd
+        cd $DEEPJETCORE
+        pwd
         python here/Train/training_example.py here/dctrain/dataCollection.djcdc here/training
 
     - name: "Run eval"
