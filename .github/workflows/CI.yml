@@ -37,15 +37,13 @@ jobs:
         activate-environment: DJC2
         environment-file: conda_env.yml  
         python-version: 3.6
-
         auto-activate-base: false
 
-    - name: "Test env vars"
+    - name: "Check conda env"
       run: |
         conda env list
         conda info
         conda list
-        which python
 
     - name: Set env vars 1
       run: | # echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
@@ -71,27 +69,17 @@ jobs:
 
     - name: Compile
       run: |
-        ls $DEEPJETCORE/bin
-        cd $DEEPJETCORE
-        cd compiled 
+        cd $DEEPJETCORE/compiled
         make -f Makefile_conda -j4
-        ls $DEEPJETCORE/bin
 
     - name: Create subpackage
       run: |
         python bin/createSubpackage.py --data here
-        cd here
-        pwd
-        echo "HERE=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd -P)" >> $GITHUB_ENV
 
     - name: Set env vars 2
       run: | # echo "GITHUB_SHA_SHORT=$(echo $GITHUB_SHA | cut -c 1-6)" >> $GITHUB_ENV
         # normally one would `source env.sh` but GHA can't do this
-        pwd
-        cd $DEEPJETCORE
-        cd here
-        pwd
-        echo "DEEPJETCORE_SUBPACKAGE=$HERE" >> $GITHUB_ENV    
+        echo "DEEPJETCORE_SUBPACKAGE=$DEEPJETCORE/here" >> $GITHUB_ENV    
         echo "PYTHONPATH=$HERE/modules:$PYTHONPATH" >> $GITHUB_ENV
         echo "PYTHONPATH=$HERE/modules/datastructures:$PYTHONPATH" >> $GITHUB_ENV
         echo "PATH=$HERE/scripts:$PATH" >> $GITHUB_ENV
@@ -111,28 +99,15 @@ jobs:
         echo $PATH 
         echo "LD_LIBRARY_PATH"
         echo $LD_LIBRARY_PATH
-        pwd -P 
-        ls 
-        cd $DEEPJETCORE
-        pwd -P 
-        ls 
-        cd $DEEPJETCORE_SUBPACKAGE 
-        pwd -P 
-        ls
-        
 
     - name: Convert files
       run: |   
-        pwd
         cd $DEEPJETCORE
-        pwd
         python bin/convertFromSource.py -i here/example_data/train_files.txt -o here/dctrain -c TrainData_example
 
     - name: "Run training"
       run: |
-        pwd
-        cd $DEEPJETCORE
-        pwd
+        # cd $DEEPJETCORE
         python here/Train/training_example.py here/dctrain/dataCollection.djcdc here/training
 
     - name: "Run eval"
